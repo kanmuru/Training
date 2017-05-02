@@ -20,6 +20,7 @@ import java.awt.event.WindowEvent;
 import java.awt.geom.Rectangle2D;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class MySnake {
 
@@ -40,8 +41,7 @@ public class MySnake {
     private Rectangle2D body;
     private Rectangle2D tail;
     private Rectangle2D food;
-    private SimpleEntry<Integer, Rectangle2D> head2;
-    private ArrayList<SimpleEntry<Integer, Rectangle2D>> body2;
+    private ArrayList<SimpleEntry<Integer, Rectangle2D>> bodyList;
     private Frame myFrame;
     private Panel myPanel;
     private Label myLabel;
@@ -61,6 +61,7 @@ public class MySnake {
         myWindow = new Window(myFrame);
         myDialog = new Dialog(myFrame);
         myCanvas = new MyCanvas();
+        bodyList = new ArrayList<SimpleEntry<Integer,Rectangle2D>>();
 
         large = INITIAL_LARGE;
 
@@ -76,42 +77,6 @@ public class MySnake {
         myPanel.add(myCanvas);
         myFrame.add(myPanel);
 
-        myCanvas.addMouseListener(new MouseListener() {
-
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                // int xPoint = 0 + (int)(Math.random() * (ANCHO_MAX_FRAME - ANCHO_MAX_CANVAS));
-                // int YPoint = 0 + (int)(Math.random() * (ALTO_MAX_FRAME - ALTO_MAX_CANVAS));
-                // System.out.println("(x, y): (" + xPoint + ", " + YPoint + ")");
-                // myCanvas.setLocation(new Point(xPoint, YPoint));
-            }
-
-            @Override
-            public void mousePressed(MouseEvent e) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                // TODO Auto-generated method stub
-
-            }
-
-        });
-
         myButton.addActionListener(new ActionListener() {
 
             @Override
@@ -123,7 +88,10 @@ public class MySnake {
 
         myFrame.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent evt) {
-                System.exit(0);
+                synchronized (this) {
+                    goOn = false;
+                    System.exit(0);
+                }
             }
         });
 
@@ -144,25 +112,25 @@ public class MySnake {
             @Override
             public void keyPressed(KeyEvent e) {
                 System.out.println("keyCode" + e.getKeyCode());
-                // Graphics2D g2 = (Graphics2D) myCanvas.getGraphics();
-                switch (e.getKeyCode()) {
-                case KeyEvent.VK_RIGHT:
-                    goOn = false;
-                    moveTo(RIGHT);
-                    break;
-                case KeyEvent.VK_UP:
-                    moveTo(UP);
-                    break;
-                case KeyEvent.VK_DOWN:
-                    moveTo(DOWN);
-                    break;
-                case KeyEvent.VK_LEFT:
-                    moveTo(LEFT);
-                    break;
-
-                default:
-                    System.out.println("Una raya en el agua");
-                    break;
+                synchronized (this) {
+                    switch (e.getKeyCode()) {
+                    case KeyEvent.VK_RIGHT:
+                        goOn = false;
+                        moveTo(RIGHT);
+                        break;
+                    case KeyEvent.VK_UP:
+                        moveTo(UP);
+                        break;
+                    case KeyEvent.VK_DOWN:
+                        moveTo(DOWN);
+                        break;
+                    case KeyEvent.VK_LEFT:
+                        moveTo(LEFT);
+                        break;
+                    default:
+                        System.out.println("Una raya en el agua");
+                        break;
+                    }
                 }
             }
         });
@@ -178,7 +146,9 @@ public class MySnake {
         Graphics2D g2 = (Graphics2D) myCanvas.getGraphics();
         g2.setPaint(Color.WHITE);
         head = new Rectangle2D.Double(INITIAL_X, INITIAL_Y, FOOD_DIMENSION, FOOD_DIMENSION);
-        body = new Rectangle2D.Double(head.getX(), head.getMaxY(), FOOD_DIMENSION, FOOD_DIMENSION);
+        Rectangle2D body = new Rectangle2D.Double(head.getX(), head.getMaxY(), FOOD_DIMENSION, FOOD_DIMENSION);
+        SimpleEntry<Integer, Rectangle2D> bodyEntry = new SimpleEntry<Integer, Rectangle2D>(UP, body);
+        bodyList.add(bodyEntry);
         tail = new Rectangle2D.Double(body.getX(), body.getMaxY(), FOOD_DIMENSION, FOOD_DIMENSION);
         food = new Rectangle2D.Double(10, 10, FOOD_DIMENSION, FOOD_DIMENSION);
         g2.fill(food);
@@ -186,8 +156,8 @@ public class MySnake {
         g2.fill(body);
         g2.fill(tail);
         moveTo(UP);
-        changeTailForHead();
-        moveTo(DOWN);
+        //changeTailForHead();
+        //moveTo(DOWN);
         // moveTo(RIGHT);
         // changeTailForHead();
         // moveTo(LEFT);
@@ -200,66 +170,78 @@ public class MySnake {
     }
 
     private void moveTo(int way) {
-        goOn = true;
         int x = (int) head.getX();
         int y = (int) head.getY();
         boolean condition = false;
         try {
-            do {
-                Graphics2D g2 = (Graphics2D) myCanvas.getGraphics();
-                switch (way) {
-                case UP:
-                    System.out.println("UP");
-                    g2.clearRect((int) tail.getX(), (int) tail.getY(), FOOD_DIMENSION, FOOD_DIMENSION);
-                    head = new Rectangle2D.Double(x, y - FOOD_DIMENSION, FOOD_DIMENSION, FOOD_DIMENSION);
-                    head2 = new SimpleEntry<Integer, Rectangle2D>(UP, head);
-                    body = new Rectangle2D.Double(head.getX(), head.getMaxY(), FOOD_DIMENSION, FOOD_DIMENSION);
-                    tail = new Rectangle2D.Double(body.getX(), body.getMaxY(), FOOD_DIMENSION, FOOD_DIMENSION);
-                    y -= FOOD_DIMENSION;
-                    condition = head.getY() > 0;
-                    break;
-                case DOWN:
-                    g2.clearRect((int) tail.getX(), (int) tail.getY(), FOOD_DIMENSION, FOOD_DIMENSION);
-                    head = new Rectangle2D.Double(x, y + FOOD_DIMENSION, FOOD_DIMENSION, FOOD_DIMENSION);
-                    body = new Rectangle2D.Double(head.getX(), head.getY() - FOOD_DIMENSION, FOOD_DIMENSION, FOOD_DIMENSION);
-                    tail = new Rectangle2D.Double(body.getX(), body.getY() - FOOD_DIMENSION, FOOD_DIMENSION, FOOD_DIMENSION);
-                    y += FOOD_DIMENSION;
-                    condition = head.getMaxY() < ALTO_MAX_CANVAS;
-                    break;
-                case RIGHT:
-                    g2.clearRect((int) tail.getX(), (int) tail.getY(), FOOD_DIMENSION, FOOD_DIMENSION);
-                    head = new Rectangle2D.Double(x + FOOD_DIMENSION, y, FOOD_DIMENSION, FOOD_DIMENSION);
-                    if (head.getY() == body.getY()) {
-                        body = new Rectangle2D.Double(head.getX() - FOOD_DIMENSION, y, FOOD_DIMENSION, FOOD_DIMENSION);
-                        if (tail.getY() == body.getY()) {
-                            tail = new Rectangle2D.Double(body.getX() - FOOD_DIMENSION, body.getY(), FOOD_DIMENSION, FOOD_DIMENSION);
+            synchronized (this) {
+                goOn = true;
+                do {
+                    Graphics2D g2 = (Graphics2D) myCanvas.getGraphics();
+                    switch (way) {
+                    case UP:
+                        System.out.println("UP");
+                        g2.clearRect((int) tail.getX(), (int) tail.getY(), FOOD_DIMENSION, FOOD_DIMENSION);
+                        head = new Rectangle2D.Double(x, y - FOOD_DIMENSION, FOOD_DIMENSION, FOOD_DIMENSION);
+                        body = new Rectangle2D.Double(head.getX(), head.getMaxY(), FOOD_DIMENSION, FOOD_DIMENSION);
+                        tail = new Rectangle2D.Double(body.getX(), body.getMaxY(), FOOD_DIMENSION, FOOD_DIMENSION);
+                        y -= FOOD_DIMENSION;
+                        condition = head.getY() > 0;
+                        g2.setPaint(Color.WHITE);
+                        g2.fill(body);
+                        break;
+                    case DOWN:
+                        System.out.println("DOWN");    
+                        g2.clearRect((int) tail.getX(), (int) tail.getY(), FOOD_DIMENSION, FOOD_DIMENSION);
+                        head = new Rectangle2D.Double(x, y + FOOD_DIMENSION, FOOD_DIMENSION, FOOD_DIMENSION);
+                        body = new Rectangle2D.Double(head.getX(), head.getY() - FOOD_DIMENSION, FOOD_DIMENSION, FOOD_DIMENSION);
+                        tail = new Rectangle2D.Double(body.getX(), body.getY() - FOOD_DIMENSION, FOOD_DIMENSION, FOOD_DIMENSION);
+                        y += FOOD_DIMENSION;
+                        condition = head.getMaxY() < ALTO_MAX_CANVAS;
+                        break;
+                    case RIGHT:
+                        ArrayList<SimpleEntry<Integer, Rectangle2D>> bodyListAux = new ArrayList<SimpleEntry<Integer, Rectangle2D>>();
+                        System.out.println("RIGHT");
+                        g2.clearRect((int) tail.getX(), (int) tail.getY(), FOOD_DIMENSION, FOOD_DIMENSION);
+                        head = new Rectangle2D.Double(x + FOOD_DIMENSION, y, FOOD_DIMENSION, FOOD_DIMENSION);
+                        for (SimpleEntry<Integer, Rectangle2D> bodyEntry : bodyList) {
+                            Rectangle2D bodyLocal = bodyEntry.getValue();
+                            if (head.getY() == bodyLocal.getY()) {
+                                bodyLocal = new Rectangle2D.Double(head.getX() - FOOD_DIMENSION, y, FOOD_DIMENSION, FOOD_DIMENSION);
+                                bodyEntry = new SimpleEntry<Integer, Rectangle2D>(RIGHT, bodyLocal);
+                            }
+                            bodyListAux.add(bodyEntry);
+                            g2.setPaint(Color.WHITE);
+                            g2.fill(bodyLocal);
                         }
-                    }
-                    x += FOOD_DIMENSION;
-                    condition = head.getMaxX() < ANCHO_MAX_CANVAS;
-                    break;
-                case LEFT:
-                    g2.clearRect((int) tail.getX(), (int) tail.getY(), FOOD_DIMENSION, FOOD_DIMENSION);
-                    head = new Rectangle2D.Double(x - FOOD_DIMENSION, y, FOOD_DIMENSION, FOOD_DIMENSION);
-                    body = new Rectangle2D.Double(head.getMaxX(), head.getY(), FOOD_DIMENSION, FOOD_DIMENSION);
-                    tail = new Rectangle2D.Double(body.getMaxX(), body.getY(), FOOD_DIMENSION, FOOD_DIMENSION);
-                    x -= FOOD_DIMENSION;
-                    condition = head.getX() > 0;
-                    break;
+                        bodyList = bodyListAux;
+                        Rectangle2D lastBody = bodyList.get(bodyList.size() - 1).getValue();
+                        if (tail.getY() == lastBody.getY()) {
+                            tail = new Rectangle2D.Double(lastBody.getX() - FOOD_DIMENSION, lastBody.getY(), FOOD_DIMENSION, FOOD_DIMENSION);
+                        } else if (bodyList.get(bodyList.size() - 1).getKey() == UP) {
+                            tail = new Rectangle2D.Double(lastBody.getX(), lastBody.getMaxY(), FOOD_DIMENSION, FOOD_DIMENSION);
+                        }
+                        condition = head.getMaxX() < ANCHO_MAX_CANVAS;
+                        break;
+                    case LEFT:
+                        System.out.println("LEFT");
+                        g2.clearRect((int) tail.getX(), (int) tail.getY(), FOOD_DIMENSION, FOOD_DIMENSION);
+                        head = new Rectangle2D.Double(x - FOOD_DIMENSION, y, FOOD_DIMENSION, FOOD_DIMENSION);
+                        body = new Rectangle2D.Double(head.getMaxX(), head.getY(), FOOD_DIMENSION, FOOD_DIMENSION);
+                        tail = new Rectangle2D.Double(body.getMaxX(), body.getY(), FOOD_DIMENSION, FOOD_DIMENSION);
+                        x -= FOOD_DIMENSION;
+                        condition = head.getX() > 0;
+                        break;
 
-                default:
-                    break;
-                }
-                g2.setPaint(Color.WHITE);
-                g2.fill(head);
-                g2.fill(body);
-                g2.fill(tail);
-                if (!goOn) {
-                    return;
-                }
-                Thread.sleep(TIME_SLEEP);
-            } while (condition && goOn);
-            return;
+                    default:
+                        break;
+                    }
+                    g2.setPaint(Color.WHITE);
+                    g2.fill(head);
+                    g2.fill(tail);
+                    Thread.sleep(TIME_SLEEP);
+                } while (condition && goOn);
+            }
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
