@@ -28,6 +28,6 @@ public class MyCanvas extends Canvas {
 
     @Override
     public void paint(Graphics g) {
-        
+        System.out.println("Aqui");
     }
 }
