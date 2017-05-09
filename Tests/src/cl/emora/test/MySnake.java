@@ -50,6 +50,10 @@ public class MySnake extends JPanel implements ActionListener {
         setFocusable(true);
         bodyList = new ArrayList<SimpleEntry<Integer, Rectangle2D>>();
 
+        init();
+    }
+
+    private void init() {
         head = new SimpleEntry<Integer, Rectangle2D>(UP, new Rectangle2D.Double(INITIAL_X, INITIAL_Y, PART_DIMENSION, PART_DIMENSION));
         int i = 0;
         int x = (int) head.getValue().getX();
@@ -168,14 +172,14 @@ public class MySnake extends JPanel implements ActionListener {
                 }
             }
         } while (ok);
-        food = new Rectangle2D.Double(x * PART_DIMENSION, y * PART_DIMENSION, PART_DIMENSION, PART_DIMENSION);
+        food = new Rectangle2D.Double((x * PART_DIMENSION), (y * PART_DIMENSION), PART_DIMENSION, PART_DIMENSION);
     }
 
     private void gameOver(Graphics2D g2) {
         String msg = "Game Over";
         Font small = new Font("Helvetica", Font.BOLD, 14);
         FontMetrics metr = getFontMetrics(small);
-        g2.setColor(Color.white);
+        g2.setColor(Color.YELLOW);
         g2.setFont(small);
         g2.drawString(msg, (ANCHO_MAX_PANEL - metr.stringWidth(msg)) / 2, ALTO_MAX_PANEL / 2);
         timer.stop();
@@ -207,18 +211,43 @@ public class MySnake extends JPanel implements ActionListener {
                 }
                 break;
             case KeyEvent.VK_SPACE:
-                if (timer.isRunning()) {
-                    timer.stop();
-                } else {
-                    timer.start();
-                }
+                pausa();
+                break;
+            case KeyEvent.VK_ENTER:
+                restart();
+                break;
+            case KeyEvent.VK_ESCAPE:
+                System.exit(0);
                 break;
             default:
                 break;
             }
         }
     }
-
+    
+    private void pausa() {
+        if (timer.isRunning()) {
+            String msg = "PAUSED";
+            Font small = new Font("Helvetica", Font.BOLD, 14);
+            FontMetrics metr = getFontMetrics(small);
+            Graphics2D g2 = (Graphics2D) getGraphics();
+            g2.setColor(Color.YELLOW);
+            g2.setFont(small);
+            g2.drawString(msg, (ANCHO_MAX_PANEL - metr.stringWidth(msg)) / 2, ALTO_MAX_PANEL / 2);
+            timer.stop();
+            timer.stop();
+        } else {
+            timer.start();
+        }
+        
+    }
+    
+    private void restart() {
+        if (goOn) {
+            init();
+        }
+    }
+    
     private void drawSnake(Graphics2D g2) {
         g2.setPaint(Color.WHITE);
         g2.draw(head.getValue());
