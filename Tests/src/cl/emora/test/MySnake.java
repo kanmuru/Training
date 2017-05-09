@@ -3,6 +3,8 @@ package cl.emora.test;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Toolkit;
@@ -24,15 +26,16 @@ public class MySnake extends JPanel implements ActionListener {
      */
     private static final long serialVersionUID = 1L;
     private static final int TIME_SLEEP = 140;
-    private static final int ANCHO_MAX_PANEL = 500;
-    private static final int ALTO_MAX_PANEL = 500;
+    private static final int ANCHO_MAX_PANEL = 300;
+    private static final int ALTO_MAX_PANEL = 300;
     private static final int UP = 1;
     private static final int DOWN = 2;
     private static final int RIGHT = 3;
     private static final int LEFT = 4;
-    private static final int FOOD_DIMENSION = 10;
-    private static final int INITIAL_X = 250;
-    private static final int INITIAL_Y = 400;
+    private static final int PART_DIMENSION = 10;
+    private static final int INITIAL_X = 150;
+    private static final int INITIAL_Y = 250;
+    private static final int INITIAL_BODY_LENGTH = 2;
     private SimpleEntry<Integer, Rectangle2D> head;
     private Rectangle2D food;
     private ArrayList<SimpleEntry<Integer, Rectangle2D>> bodyList;
@@ -47,16 +50,16 @@ public class MySnake extends JPanel implements ActionListener {
         setFocusable(true);
         bodyList = new ArrayList<SimpleEntry<Integer, Rectangle2D>>();
 
-        head = new SimpleEntry<Integer, Rectangle2D>(UP, new Rectangle2D.Double(INITIAL_X, INITIAL_Y, FOOD_DIMENSION, FOOD_DIMENSION));
+        head = new SimpleEntry<Integer, Rectangle2D>(UP, new Rectangle2D.Double(INITIAL_X, INITIAL_Y, PART_DIMENSION, PART_DIMENSION));
         int i = 0;
         int x = (int) head.getValue().getX();
         int y = (int) head.getValue().getMaxY();
-        while (i <= 2) {
+        while (i < INITIAL_BODY_LENGTH) {
             bodyList.add(
-                    new SimpleEntry<Integer, Rectangle2D>(UP, new Rectangle2D.Double(x, y + (FOOD_DIMENSION * i), FOOD_DIMENSION, FOOD_DIMENSION)));
+                    new SimpleEntry<Integer, Rectangle2D>(UP, new Rectangle2D.Double(x, y + (PART_DIMENSION * i), PART_DIMENSION, PART_DIMENSION)));
             i++;
         }
-        food = new Rectangle2D.Double(10, 10, FOOD_DIMENSION, FOOD_DIMENSION);
+        locateFood();
         timer = new Timer(TIME_SLEEP, this);
         timer.start();
     }
@@ -68,47 +71,38 @@ public class MySnake extends JPanel implements ActionListener {
         if (goOn) {
             ArrayList<SimpleEntry<Integer, Rectangle2D>> bodyListAux = new ArrayList<SimpleEntry<Integer, Rectangle2D>>();
             switch (way) {
-
             case UP:
-                System.out.println("UP");
                 bodyListAux.add(head);
                 bodyList.remove(bodyList.size() - 1);
                 bodyListAux.addAll(bodyList);
-                head = new SimpleEntry<Integer, Rectangle2D>(way, new Rectangle2D.Double(x, y - FOOD_DIMENSION, FOOD_DIMENSION, FOOD_DIMENSION));
+                head = new SimpleEntry<Integer, Rectangle2D>(way, new Rectangle2D.Double(x, y - PART_DIMENSION, PART_DIMENSION, PART_DIMENSION));
                 bodyList = bodyListAux;
-                y -= FOOD_DIMENSION;
+                y -= PART_DIMENSION;
                 break;
-
             case DOWN:
-                System.out.println("DOWN");
                 bodyListAux.add(head);
                 bodyList.remove(bodyList.size() - 1);
                 bodyListAux.addAll(bodyList);
-                head = new SimpleEntry<Integer, Rectangle2D>(way, new Rectangle2D.Double(x, y + FOOD_DIMENSION, FOOD_DIMENSION, FOOD_DIMENSION));
+                head = new SimpleEntry<Integer, Rectangle2D>(way, new Rectangle2D.Double(x, y + PART_DIMENSION, PART_DIMENSION, PART_DIMENSION));
                 bodyList = bodyListAux;
-                y += FOOD_DIMENSION;
+                y += PART_DIMENSION;
                 break;
-
             case RIGHT:
-                System.out.println("RIGHT");
                 bodyListAux.add(head);
                 bodyList.remove(bodyList.size() - 1);
                 bodyListAux.addAll(bodyList);
-                head = new SimpleEntry<Integer, Rectangle2D>(way, new Rectangle2D.Double(x + FOOD_DIMENSION, y, FOOD_DIMENSION, FOOD_DIMENSION));
+                head = new SimpleEntry<Integer, Rectangle2D>(way, new Rectangle2D.Double(x + PART_DIMENSION, y, PART_DIMENSION, PART_DIMENSION));
                 bodyList = bodyListAux;
-                x += FOOD_DIMENSION;
+                x += PART_DIMENSION;
                 break;
-
             case LEFT:
-                System.out.println("LEFT");
                 bodyListAux.add(head);
                 bodyList.remove(bodyList.size() - 1);
                 bodyListAux.addAll(bodyList);
-                head = new SimpleEntry<Integer, Rectangle2D>(way, new Rectangle2D.Double(x - FOOD_DIMENSION, y, FOOD_DIMENSION, FOOD_DIMENSION));
+                head = new SimpleEntry<Integer, Rectangle2D>(way, new Rectangle2D.Double(x - PART_DIMENSION, y, PART_DIMENSION, PART_DIMENSION));
                 bodyList = bodyListAux;
-                x -= FOOD_DIMENSION;
+                x -= PART_DIMENSION;
                 break;
-                
             default:
                 break;
             }
@@ -124,34 +118,103 @@ public class MySnake extends JPanel implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        System.out.println("[actionPerformed]");
-        moveTo(0);
+        if (goOn) {
+            checkRules();
+            moveTo(0);
+        }
         repaint();
+    }
+
+    private void checkRules() {
+        if ((head.getValue().getX() == 0 && head.getKey() == LEFT) || (head.getValue().getMaxX() == ANCHO_MAX_PANEL && head.getKey() == RIGHT)
+                || (head.getValue().getY() == 0 && head.getKey() == UP) || (head.getValue().getMaxY() == ALTO_MAX_PANEL && head.getKey() == DOWN)) {
+            goOn = false;
+        }
+        for (SimpleEntry<Integer, Rectangle2D> bodyEntry : bodyList) {
+            if (head.getKey() == UP && bodyEntry.getKey() != DOWN && bodyEntry.getValue().getMaxY() == head.getValue().getY()
+                    || head.getKey() == DOWN && bodyEntry.getKey() != UP && bodyEntry.getValue().getY() == head.getValue().getMaxY()
+                    || head.getKey() == RIGHT && bodyEntry.getKey() != LEFT && bodyEntry.getValue().getX() == head.getValue().getMaxX()
+                    || head.getKey() == LEFT && bodyEntry.getKey() != RIGHT && bodyEntry.getValue().getMaxX() == head.getValue().getX()) {
+                goOn = false;
+                break;
+            }
+        }
+        if ((head.getValue().getX() == food.getMaxX() && head.getValue().getY() == food.getY() && head.getKey() == LEFT)
+                || (head.getValue().getMaxX() == food.getX() && head.getValue().getY() == food.getY() && head.getKey() == RIGHT)
+                || (head.getValue().getY() == food.getMaxY() && head.getValue().getX() == food.getX() && head.getKey() == UP)
+                || (head.getValue().getMaxY() == food.getY() && head.getValue().getX() == food.getX() && head.getKey() == DOWN)) {
+            bodyList.add(0, head);
+            head = new SimpleEntry<Integer, Rectangle2D>(head.getKey(), food);
+            locateFood();
+        }
+    }
+
+    private void locateFood() {
+        int x = 0;
+        int y = 0;
+        boolean ok = true;
+        do {
+            int randomPositionX = (ANCHO_MAX_PANEL - PART_DIMENSION) / PART_DIMENSION;
+            int randomPositionY = (ANCHO_MAX_PANEL - PART_DIMENSION) / PART_DIMENSION;
+            x = (int) (Math.random() * randomPositionX);
+            y = (int) (Math.random() * randomPositionY);
+            for (SimpleEntry<Integer, Rectangle2D> bodyEntry : bodyList) {
+                if (((x * PART_DIMENSION) == head.getValue().getX() && (y * PART_DIMENSION) == head.getValue().getY())
+                        || ((x * PART_DIMENSION) == bodyEntry.getValue().getX() && (y * PART_DIMENSION) == bodyEntry.getValue().getY())
+                        || (food != null && (x * PART_DIMENSION) == food.getX() && (y * PART_DIMENSION) == food.getY())) {
+                    break;
+                } else {
+                    ok = false;
+                }
+            }
+        } while (ok);
+        food = new Rectangle2D.Double(x * PART_DIMENSION, y * PART_DIMENSION, PART_DIMENSION, PART_DIMENSION);
+    }
+
+    private void gameOver(Graphics2D g2) {
+        String msg = "Game Over";
+        Font small = new Font("Helvetica", Font.BOLD, 14);
+        FontMetrics metr = getFontMetrics(small);
+        g2.setColor(Color.white);
+        g2.setFont(small);
+        g2.drawString(msg, (ANCHO_MAX_PANEL - metr.stringWidth(msg)) / 2, ALTO_MAX_PANEL / 2);
+        timer.stop();
     }
 
     private class TAdapter extends KeyAdapter {
 
         @Override
         public void keyPressed(KeyEvent e) {
-            System.out.println("keyCode" + e.getKeyCode());
-            synchronized (this) {
-                switch (e.getKeyCode()) {
-                case KeyEvent.VK_RIGHT:
+            switch (e.getKeyCode()) {
+            case KeyEvent.VK_RIGHT:
+                if (head.getKey() != LEFT) {
                     moveTo(RIGHT);
-                    break;
-                case KeyEvent.VK_UP:
-                    moveTo(UP);
-                    break;
-                case KeyEvent.VK_DOWN:
-                    moveTo(DOWN);
-                    break;
-                case KeyEvent.VK_LEFT:
-                    moveTo(LEFT);
-                    break;
-                default:
-                    System.out.println("Una raya en el agua");
-                    break;
                 }
+                break;
+            case KeyEvent.VK_UP:
+                if (head.getKey() != DOWN) {
+                    moveTo(UP);
+                }
+                break;
+            case KeyEvent.VK_DOWN:
+                if (head.getKey() != UP) {
+                    moveTo(DOWN);
+                }
+                break;
+            case KeyEvent.VK_LEFT:
+                if (head.getKey() != RIGHT) {
+                    moveTo(LEFT);
+                }
+                break;
+            case KeyEvent.VK_SPACE:
+                if (timer.isRunning()) {
+                    timer.stop();
+                } else {
+                    timer.start();
+                }
+                break;
+            default:
+                break;
             }
         }
     }
@@ -159,9 +222,12 @@ public class MySnake extends JPanel implements ActionListener {
     private void drawSnake(Graphics2D g2) {
         g2.setPaint(Color.WHITE);
         g2.draw(head.getValue());
-        g2.draw(food);
+        g2.fill(food);
         for (SimpleEntry<Integer, Rectangle2D> bodyEntry : bodyList) {
             g2.draw(bodyEntry.getValue());
+        }
+        if (!goOn) {
+            gameOver(g2);
         }
         Toolkit.getDefaultToolkit().sync();
     }
