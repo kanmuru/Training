@@ -1,15 +1,14 @@
 package cl.emora.test;
 
 import java.awt.EventQueue;
-import java.awt.Frame;
 import java.awt.HeadlessException;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 
-public class RunSnake extends Frame {
+import javax.swing.JFrame;
+
+public class RunSnake extends JFrame {
 
     /**
-     * 
+     * Serial.
      */
     private static final long serialVersionUID = 1L;
     
@@ -21,11 +20,9 @@ public class RunSnake extends Frame {
         add(new MySnake());
         setResizable(false);
         pack();
-        this.addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent evt) {
-                System.exit(0);
-            }
-        });
+        setTitle("Snake");
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 
     public static void main(String[] args) {
