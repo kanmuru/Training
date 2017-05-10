@@ -14,8 +14,8 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.geom.Rectangle2D;
 import java.util.AbstractMap.SimpleEntry;
-
 import java.util.ArrayList;
+
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
@@ -32,7 +32,7 @@ public class MySnake extends JPanel implements ActionListener {
     private static final int DOWN = 2;
     private static final int RIGHT = 3;
     private static final int LEFT = 4;
-    private static final int PART_DIMENSION = 10;
+    private static final int PART_SIZE = 10;
     private static final int INITIAL_X = 150;
     private static final int INITIAL_Y = 250;
     private static final int INITIAL_BODY_LENGTH = 2;
@@ -54,14 +54,13 @@ public class MySnake extends JPanel implements ActionListener {
 
     private void init() {
         goOn = true;
-        head = new SimpleEntry<Integer, Rectangle2D>(UP, new Rectangle2D.Double(INITIAL_X, INITIAL_Y, PART_DIMENSION, PART_DIMENSION));
+        head = new SimpleEntry<Integer, Rectangle2D>(UP, new Rectangle2D.Double(INITIAL_X, INITIAL_Y, PART_SIZE, PART_SIZE));
         bodyList = new ArrayList<SimpleEntry<Integer, Rectangle2D>>();
         int i = 0;
         int x = (int) head.getValue().getX();
         int y = (int) head.getValue().getMaxY();
         while (i < INITIAL_BODY_LENGTH) {
-            bodyList.add(
-                    new SimpleEntry<Integer, Rectangle2D>(UP, new Rectangle2D.Double(x, y + (PART_DIMENSION * i), PART_DIMENSION, PART_DIMENSION)));
+            bodyList.add(new SimpleEntry<Integer, Rectangle2D>(UP, new Rectangle2D.Double(x, y + (PART_SIZE * i), PART_SIZE, PART_SIZE)));
             i++;
         }
         locateFood();
@@ -83,7 +82,7 @@ public class MySnake extends JPanel implements ActionListener {
                 bodyListAux.add(head);
                 bodyList.remove(bodyList.size() - 1);
                 bodyListAux.addAll(bodyList);
-                head = new SimpleEntry<Integer, Rectangle2D>(way, new Rectangle2D.Double(x, y - PART_DIMENSION, PART_DIMENSION, PART_DIMENSION));
+                head = new SimpleEntry<Integer, Rectangle2D>(way, new Rectangle2D.Double(x, y - PART_SIZE, PART_SIZE, PART_SIZE));
                 bodyList = bodyListAux;
                 break;
             case DOWN:
@@ -94,7 +93,7 @@ public class MySnake extends JPanel implements ActionListener {
                 bodyListAux.add(head);
                 bodyList.remove(bodyList.size() - 1);
                 bodyListAux.addAll(bodyList);
-                head = new SimpleEntry<Integer, Rectangle2D>(way, new Rectangle2D.Double(x, y + PART_DIMENSION, PART_DIMENSION, PART_DIMENSION));
+                head = new SimpleEntry<Integer, Rectangle2D>(way, new Rectangle2D.Double(x, y + PART_SIZE, PART_SIZE, PART_SIZE));
                 bodyList = bodyListAux;
                 break;
             case RIGHT:
@@ -105,7 +104,7 @@ public class MySnake extends JPanel implements ActionListener {
                 bodyListAux.add(head);
                 bodyList.remove(bodyList.size() - 1);
                 bodyListAux.addAll(bodyList);
-                head = new SimpleEntry<Integer, Rectangle2D>(way, new Rectangle2D.Double(x + PART_DIMENSION, y, PART_DIMENSION, PART_DIMENSION));
+                head = new SimpleEntry<Integer, Rectangle2D>(way, new Rectangle2D.Double(x + PART_SIZE, y, PART_SIZE, PART_SIZE));
                 bodyList = bodyListAux;
                 break;
             case LEFT:
@@ -116,7 +115,7 @@ public class MySnake extends JPanel implements ActionListener {
                 bodyListAux.add(head);
                 bodyList.remove(bodyList.size() - 1);
                 bodyListAux.addAll(bodyList);
-                head = new SimpleEntry<Integer, Rectangle2D>(way, new Rectangle2D.Double(x - PART_DIMENSION, y, PART_DIMENSION, PART_DIMENSION));
+                head = new SimpleEntry<Integer, Rectangle2D>(way, new Rectangle2D.Double(x - PART_SIZE, y, PART_SIZE, PART_SIZE));
                 bodyList = bodyListAux;
                 break;
             default:
@@ -134,7 +133,6 @@ public class MySnake extends JPanel implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-
         if (goOn) {
             checkEat();
             checkCrush();
@@ -144,13 +142,6 @@ public class MySnake extends JPanel implements ActionListener {
     }
 
     private void checkCrush() {
-        // System.out.println("[checkRules] head = [" + head + "]");
-        // System.out.println("[checkRules] head.getValue().getMaxX() = [" + head.getValue().getMaxX() + "]");
-        // System.out.println("[checkRules] head.getValue().getMaxY() = [" + head.getValue().getMaxY() + "]");
-        // System.out.println("[checkRules] food = [" + food + "]");
-        // System.out.println("[checkRules] food.getMaxX() = [" + food.getMaxX() + "]");
-        // System.out.println("[checkRules] food.getMaxY() = [" + food.getMaxY() + "]");
-        // Valida si la cabeza alcanza el borde del panel.
         if ((head.getValue().getX() <= 0 && head.getKey() == LEFT) || (head.getValue().getMaxX() >= ANCHO_MAX_PANEL && head.getKey() == RIGHT)
                 || (head.getValue().getY() <= 0 && head.getKey() == UP) || (head.getValue().getMaxY() >= ALTO_MAX_PANEL && head.getKey() == DOWN)) {
             goOn = false;
@@ -188,26 +179,22 @@ public class MySnake extends JPanel implements ActionListener {
         int y = 0;
         boolean ok = true;
         do {
-            int randomPositionX = (ANCHO_MAX_PANEL - PART_DIMENSION) / PART_DIMENSION;
-            int randomPositionY = (ANCHO_MAX_PANEL - PART_DIMENSION) / PART_DIMENSION;
+            int randomPositionX = (ANCHO_MAX_PANEL - PART_SIZE) / PART_SIZE;
+            int randomPositionY = (ANCHO_MAX_PANEL - PART_SIZE) / PART_SIZE;
             x = (int) (Math.random() * randomPositionX);
             y = (int) (Math.random() * randomPositionY);
-            // System.out.println("[locateFood] x = [" + (x * PART_DIMENSION) + "], y = [" + (y * PART_DIMENSION) +"]");
-            // System.out.println("[locateFood] head = [" + head + "]");
-            // System.out.println("[locateFood] food = [" + food + "]");
             for (SimpleEntry<Integer, Rectangle2D> bodyEntry : bodyList) {
-                // System.out.println("[locateFood] bodyPart = [" + bodyEntry + "]");
-                if (((x * PART_DIMENSION) == head.getValue().getX() && (y * PART_DIMENSION) == head.getValue().getY())
-                        || ((x * PART_DIMENSION) == bodyEntry.getValue().getX() && (y * PART_DIMENSION) == bodyEntry.getValue().getY())
-                        || (food != null && (x * PART_DIMENSION) == food.getX() && (y * PART_DIMENSION) == food.getY())) {
+                if (((x * PART_SIZE) == head.getValue().getX() && (y * PART_SIZE) == head.getValue().getY())
+                        || ((x * PART_SIZE) == bodyEntry.getValue().getX() && (y * PART_SIZE) == bodyEntry.getValue().getY())
+                        || (food != null && (x * PART_SIZE) == food.getX() && (y * PART_SIZE) == food.getY())) {
+                    ok = true;
                     break;
                 } else {
                     ok = false;
                 }
             }
         } while (ok);
-        food = new Rectangle2D.Double((x * PART_DIMENSION), (y * PART_DIMENSION), PART_DIMENSION, PART_DIMENSION);
-
+        food = new Rectangle2D.Double((x * PART_SIZE), (y * PART_SIZE), PART_SIZE, PART_SIZE);
     }
 
     private void gameOver(Graphics2D g2) {
@@ -230,22 +217,22 @@ public class MySnake extends JPanel implements ActionListener {
         public void keyPressed(KeyEvent e) {
             switch (e.getKeyCode()) {
             case KeyEvent.VK_RIGHT:
-                if (head.getKey() != LEFT) {
+                if (head.getKey() != LEFT && head.getKey() != RIGHT) {
                     moveTo(RIGHT);
                 }
                 break;
             case KeyEvent.VK_UP:
-                if (head.getKey() != DOWN) {
+                if (head.getKey() != DOWN && head.getKey() != UP) {
                     moveTo(UP);
                 }
                 break;
             case KeyEvent.VK_DOWN:
-                if (head.getKey() != UP) {
+                if (head.getKey() != UP && head.getKey() != DOWN) {
                     moveTo(DOWN);
                 }
                 break;
             case KeyEvent.VK_LEFT:
-                if (head.getKey() != RIGHT) {
+                if (head.getKey() != RIGHT && head.getKey() != LEFT) {
                     moveTo(LEFT);
                 }
                 break;
@@ -278,7 +265,6 @@ public class MySnake extends JPanel implements ActionListener {
                 timer.restart();
             }
         }
-
     }
 
     private void restart() {
@@ -299,7 +285,7 @@ public class MySnake extends JPanel implements ActionListener {
         FontMetrics metr = getFontMetrics(small);
         g2.setColor(Color.YELLOW);
         g2.setFont(small);
-        g2.drawString(msg, (ANCHO_MAX_PANEL - metr.stringWidth(msg) - PART_DIMENSION), metr.getHeight() + PART_DIMENSION);
+        g2.drawString(msg, (ANCHO_MAX_PANEL - metr.stringWidth(msg) - PART_SIZE), metr.getHeight() + PART_SIZE);
         if (!goOn) {
             gameOver(g2);
         }
